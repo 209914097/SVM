@@ -1,0 +1,406 @@
+<!DOCTYPE html >
+<!--版本号v1-->
+<html >
+<head>
+<title>SVM开发记录文档</title>
+ <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+ <script src="jquery.js" type="text/javascript"></script>
+ <script src="Chart.min.js" type="text/javascript"></script>
+ 
+<link rel="stylesheet" type="text/css" href="seelmovie.css">
+<link rel="stylesheet" type="text/css" href="googlefonts.css">
+<!--字体css原地址 https://cat.iyeku.com/css/googlefonts.css -->
+</head>
+<body>
+<div id="head" style="top:0px;" >	
+    <input style="    width: 90px; " type="button" id="A"class="bt" value="开场白">    	
+    <input   type="button" id="B"class="bt" value="SVM简述">  
+	<input   type="button" id="C"class="bt" value="SVM训练">    
+	<input   type="button" id="D"class="bt" value="SVM多分类问题"> 
+    <input   type="button" id="E"class="bt" value="结果展示">  
+	<input   type="button" id="F"class="bt" value="SVM和KNN对比">    
+	<input style="    width: 90px; "   type="button" id="G"class="bt" value="感谢"> 
+	<input style="    width: 90px; "   type="button" id="H"class="bt" value="结束"> 
+	  
+</div>
+
+<div id="background" class="bg">
+<div class="bg text">
+<h1>Seel Develop</h1>	
+<p>用支持向量机识别验证码并模拟登陆</p>
+</div>	
+<div class="bg overlay"></div>
+<img src="./bg1.jpg"></img>
+</div>     
+
+  
+<div id="msg" >	
+<h2 id='Atitle'>开场白</h2>
+<h4>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+见君如初识，犹如故人归。
+</h4>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;       
+本文与“用K近邻算法识别验证码并模拟登陆”(以下称为“KNN开发文档”)是姊妹篇，很多算法和思路都由她继承而来。因此您可以在阅读本文的同时，顺便参照“KNN开发记录文档”以获取更多信息。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+这次我们以东北大学教务处(本科生)为例，用支持向量机算法(以下称为SVM)识别验证码并模拟登陆。然后还是原来的行文思路，还是原来的思维方式，所以接下来的开场白就不多说了，具体可以参见“KNN开发记录文档”的开场白(总述)(*/ω＼*) 
+</p>
+
+<br>
+
+<h2>准备</h2>
+<div style="margin-left: 36px;">
+	<h3><li>网络</li></h3>
+	<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+	需要网络加载第三方mathjax库来显示SVM的数学公式，不然数学公式将显示乱码。    
+	</p>
+
+	<h3><li>下载验证码</li></h3>
+
+	<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+	<a class='attention'>edit.py&nbsp;&nbsp;download()</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img  src='1.jpg'>
+	</p>
+	<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+	如何下载？在KNN开发文档中提到，不再赘述。这次下载了1500张验证码。
+	</p>
+	<h3><li>图片处理</li></h3>
+	<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+	<a class='attention'>edit.py&nbsp;&nbsp;biting(imgpath, threshold)</a>
+	</p>
+	<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+	对图片灰度化二值化，函数阀值改为140。  
+	</p>
+	<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+	<a class='attention'>edit.py&nbsp;&nbsp;scissor(imgpath)</a>
+	</p>
+	<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+	剪切图片。每个验证码都有"="，故不需把"="剪出来，所以只需剪前三个符号，重心改为10,24,37。   
+	</p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+	<a class='attention'>edit.py&nbsp;&nbsp;getimgtable(imgpath)&nbsp;&nbsp;creatfile(data, filename)</a>
+	</p>
+	<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+	图片单元形成的数阵文件，我把它保存在dig.zip″压缩文件中。   
+	</p>
+</div>
+
+<br>
+
+<h2 id='Btitle'>Step1&nbsp;SVM简述</h2>
+<div class='pic'><img  src='2.jpg'><p>支持向量机</p></div>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;何谓支持向量机？如上图示，一个二维平面有两类点，现需分类。其中每个点都对应一个二维坐标，称之为向量。然后一条线把它们一分为二，称之为超平面。这个超平面的数学求解过程，只需要用到图中一小部分点的二维坐标(画圈点)，称之为支持向量。用这种求出超平面再用超平面去分类的机制，称之为支持向量机。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class='attention'>现在问题关键在于寻找这条一分为二的线(超平面)。</a><p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;把红点和蓝点一分为二可以画n多条线，但我们要找这样一条线：离它最近的蓝点、红点的距离，是这n条线中距离最大的！</p>
+
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在此例中，所有的超平面(直线公式)可表示为：</p>
+$$
+ ax + by + c = 0
+$$
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;点$(x_0,y_0)$到任一直线距离可表示为：</p>
+$$
+\frac{|ax_0+by_0+ c|} {\sqrt{a^2+b^2}}
+$$
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;用矩阵表示：</p>
+$$
+即 \quad w = {\left[ \begin{array}{ccc}
+a \\
+b
+\end{array}
+\right ]}
+
+\quad 
+
+x = {\left[ \begin{array}{ccc}
+x_0 \\
+y_0
+\end{array}
+\right ]}
+$$
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;然后推广至N维，超平面表示为：</p>
+$$
+w·x+b=0
+$$
+
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;点$(x,y)$到任一超平面距离可表示为：</p>
+$$
+\gamma=\frac{w^{T}x+b} {||w||}
+$$
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;然后，我们要使离超平面距离最近(几何间隔最小)的点的距离在所有超平面中是最大，就是要求$\quad max \ { min \ [ \gamma=\frac{w^{T}x+b} {||w||}] }\quad$。假设$\quad w^{T}x+b=c \quad$两边同时除以$c$，有$\quad w^{T}x+b=1 \quad$，那么问题将变成：</p>
+$$ \left\{
+\begin{aligned}
+\underset{w,b}{max} \ { min \ [ \frac{1} {||w||}]}  \\
+s.t. \quad w^{T}x+b=1
+\end{aligned}
+\right. \qquad(1)
+$$
+
+<p> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;值得注意的是$w \ b$为超平面公式中常数，同时放大或缩小$c \quad w·x+b=0$依然表示着同一个超平面，求解最优化问题$ \ (1) \ $即可求出$ \ w \ b \ $,从而超平面得解。</p>
+<p style=" color: red;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;现在问题关键转移到如何求解$ \quad w , b \quad $上来。<p>
+<p >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;求解该最优化问题，涉及拉格朗日乘子法、KKT条件(KT条件)、对偶问题。数学对我来说一直是个棘手的问题，研究生最优化课程当时学得那叫一个朦胧。略过各种推导，最后这个最优化问题将变成求解下面这个最优化问题。(╯‵□′)╯︵┻━┻<p>
+$$
+\left\{
+\begin{aligned}
+\underset{ \alpha }{min} \ \frac{1}{2}  \sum^m_{i=1,j=1}\alpha_i \alpha_j y_i y_j K( x_i , y_j) - \sum^m_{i=1} \alpha_i  \\
+s.t. \qquad \sum^m_{i=1} \alpha_i y_i=0 \\
+0<= \alpha_i <= C
+\end{aligned}
+\right. \qquad(2)
+$$
+<p >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;若求出向量$ \ \alpha \ $，则超平面方程中$ \ w \ $为：</p>
+$$
+w=\sum^m_{i=1} \alpha_i y_i x_i
+$$
+<p >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;目标函数中$ \ K( x_i , y_j) \ $是一个数学函数，称之为核函数。目的在于对输入的向量进行处理一下，变成维数更高的向量，称之为投影到高维空间中。怎么处理，分为线性和非线性的，像刚开始那个用一条直线就能一分为二的情况，称之为线性的，而那些需要用古古怪怪的曲线才能一分为二的，称之为非线性。那些非线性的超平面，在高维空间中是一个平坦的平面，类同在二维空间的一条笔直的直线一样，它只是在低维空间中投影为古古怪怪的曲线。对于非线性的情况来说，有一个流行的核函数，径向基核函数。</p>
+<p style=" color: red;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;现在问题关键变为如何求解$ \quad \alpha , b \quad $。<p>
+<p >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;John C. Platt是微软研究院一位数学和程序都很好的大神，在求解第二个最优化问题时，他想到了序列最小优化算法(SMO)，可以更快地解出$ \quad \alpha , b \quad $。具体代码请参见：</p>
+<p >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class='attention'>svmMLiA.py &nbsp;&nbsp; smoP(dataMatIn, classLabels, C, toler, maxIter,kTup=('lin', 0))</a></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;但是我建议，把这个函数当作工具来用就好了，因为它真的很难。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;然后至此，超平面就被求解出来，SVM最优化问题由此而画上句号。</p>
+<h3>文件结构</h3>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这里陈述一下我的代码文件结构。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class='attention'>edit.py</a>相当于我在开发过程中的草稿纸，上面写了很多训练数据用到的小工具，包括批量重命名，对图片单元的粗分类等，还有一些试验性的代码。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class='attention'>svmMLiA.py</a>来自于《机器学习实战》中的随书代码，但是我根据实际对它进行了改动，并且里面的部分代码并没利用。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class='attention'>svm_login</a>这个文件夹是可以独立工作的，里面把训练出来的支持向量和$ \quad  b \quad $保存了起来，运行时将无需依赖样本数据重新训练，以节省时间和存储空间。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class='attention'>train</a>这个文件夹用来放用于训练的图片单元的数阵文件。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class='attention'>testDigits</a>这个文件夹用来放用于测试正确率的图片单元的数阵文件。</p>
+<h3>扩展资料</h3>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我的理念是把SVM当作一个工具，一个黑箱，因此想要知道SVM真正的工作原理，上面的介绍是远远不够的。故此列出一下资料供扩展。</p>
+<div  class='code'>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a target="_blank" href="https://www.zhihu.com/question/21094489#answer-29941774">知乎</a></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a target="_blank" href="https://www.jianshu.com/p/fa25ac45e6e7">简书</a></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a target="_blank" href=" https://blog.csdn.net/wangyanphp/article/details/54848599">CSDN</a></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a target="_blank" href="https://www.cnblogs.com/pinard/p/6111471.html">SMO算法原理</a></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a target="_blank" href="https://blog.csdn.net/xianlingmao/article/details/7919597">拉格朗日乘子法和KKT条件</a></p>
+</div>
+<br>
+
+<h2 id='Ctitle'>Step2&nbsp;SVM训练</h2>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SVM训练的目的，就是通过样本数据求解得到的$ \quad \alpha , b \quad $，再由$ \quad  \alpha \quad $进而得出支持向量。 </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;把支持向量和$ \quad  b \quad $的值保存起来，下次将无需重新训练，这样一个分类器就做好了。因而支持向量和$ \quad  b \quad $的值将是SVM训练的最终目的。 </p>
+<h3>&nbsp;像素和</h3>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 前面的准备工作做完后，1500张验证码每张切成3个图片单元，将会有4500个图片单元。在SVM算法开发完成之前，需要人工对4500个图片单元进行人工正确分类，以便用于后面的SVM训练。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4500个图片单元，你还在苦苦地一个个将它们分门别类吗？时代在进步，像素和的粗分类方法由此而出现。请看下图：</p>
+<div class='pic'><img  src='3.jpg'><p>可以看出"5"的像素(黑点)一共是68</p></div>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 我们在每种类别的图片单元中随机抽一张图片单元放大后，统计一下组成它的像素和是多少时，发现有着模糊的分布规律。</p>
+<div style="margin: auto;position: relative; height:25vh; width:40vw"><canvas id="myChart"></canvas></div>
+<br>
+<br>
+<br><br>
+<br>
+<br><br>
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+由此我们想到计算每一张图片单元的像素和，然后根据像素和进行粗分类的算法。代码参见<a class='attention'>edit.py</a>中小工具部分。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+效果是4500张图片单元，有200多张无法分类需要人工分类，这大大减轻了我们的工作负担。</p>
+<h3>&nbsp;训练</h3>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+人工分类完成，获得了4500张用于训练的图片单元。接下来我们将以构建(+,*)分类器为例，说明一个分类是如何诞生的。
+</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+我们让(+,*)分类器的目标是遇见"+"输出1，遇见"*"输出-1(反过来也可以)。
+</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+现在分别选择700张"+"和"*"的图片单元，放在<a class='attention'>train</a>文件夹中用于训练，剩下的"+"和"*"图片单元放在<a class='attention'>testDigits</a>文件夹中用于测试，若果<a class='attention'>testDigits</a>文件夹中图片单元数量太小，可以从<a class='attention'>train</a>文件夹中复制一部分过来。学名称之为交叉验证。(*/ω＼*)
+</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+然后，使用<a class='attention'>edit.py svmMLiA.testDigits(m,l) </a>开始训练数据，训练完数据后，要把求得的支持向量(代码中支持向量包括向量和该向量对应的标签)和$ \ b \ $保存在一个文本中，为此可以参阅<a class='attention'>svmMLiA.py wmartix(fname,data) </a>。我把$ \ b \ $存在<a class='attention'>b.txt </a>，支持向量存在<a class='attention'>sVs.txt </a>，支持向量标签存在<a class='attention'>labelSV_alphas.txt</a>。
+</p>
+
+<div class='pic'><img  src='1.gif'><p>训练过程</p></div>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+保存好$ \  b \ $、支持向量和支持向量标签后，判断"+,*"就不用再次训练了，这次我们在<a class='attention'>edit.py</a>调用<a class='attention'>svm_login.py Div_add_mul </a>函数，让它直接读取<a class='attention'>b.txt </a>、<a class='attention'>sVs.txt </a>、<a class='attention'>labelSV_alphas.txt</a>文件进行判断，读取文件通过代码<a class='attention'>svm_login.py rmartix(fname) </a>实现。
+</p>
+<div class='pic'><img  src='2.gif'><p>(+,*)分类器</p></div>
+<br>
+<br>
+<br><br>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+可以看到(+,*)分类器正确率还不错，没出现错误的现象。至此SVM训练介绍完毕，你应该知道如何构建一个分类器了吧。
+</p>
+
+<h2 id='Dtitle'>Step3&nbsp;SVM多分类问题</h2>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SVM分类器只能输出1，-1，即只能回答yes &nbsp; or &nbsp; no。那该如何识别验证码上那么多的数字呢？答案是用多个SVM分类器去进行多分类。
+</p>
+<h3>&nbsp;一对多</h3>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+假如有ABCD四个类别要分类，那么可以这么想，构建4个SVM分类器即：(A,BCD)&nbsp; (B,ACD)&nbsp; (C,ABD)&nbsp; (D,ABC)，当一个图片单元出现时，让它挨个问4个分类器，若(A,BCD)输出1，那他就是A，若输出-1，那就继续问其他分类器。4个分类器总有输出1的时候。如果都出现-1那就是无法识别的情况了。
+</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+这样看来，我们的验证码有9个类别，这需要9个分类器。
+</p>
+
+<h3>&nbsp;一对一</h3>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+ABCD四个类别要分类,也可以这样构建分类器，即(A,B)&nbsp; (A,C)&nbsp; (A,D)&nbsp; (B,C)&nbsp; (B,D)&nbsp; (C,D)，然后当一个图片单元(假如是A)出现时，让它挨个问分类器，然后投票，哪个类别票数多(显然投A的票数最多)，就属于那一类。
+</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 当然这6个分类器，也可以不采用投票的方式，而是采用一种叫有向无环图的形式。<p>
+<div class='pic'><img  src='4.jpg'><p>1,2,3,4,5分类</p></div>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+这样看来，我们的验证码有9个类别，这需要$ \ 9 \times 8 \div 2 =36 \ $个分类器。
+</p>
+<h4>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+以上办法来自于网上。
+</h4>
+<h3>&nbsp;更好的办法</h3>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;说了那么多，其实我想到一个巧妙的办法,它只需要7个分类器。(•ᴗ•)</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 一张验证码需要判断3个位置。</p>
+<div class='pic'><img  src='5.jpg'><p></p></div>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1位是运算符，不是"+"就是"*"，因此交给(+,*)分类器判断即可。<p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0位和2位都是1-7的数字，因此交给以下6个分类器判断即可。<p>
+$$
+(5,123467) \ (3,12467) \ (6,1247) \ (4,127) \ (7,12) \ (2,1)
+$$
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为何这样构建数字分类器？在4500个数字单元图片里，我统计了每个数字符号出现的次数。
+</p> 
+<div style="margin: auto;position: relative; height:25vh; width:40vw"><canvas id="numChart"></canvas></div>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在数字1-7中，出现概率最高的依次是5,3,6,4,7,2,也就是说5是出现概率最高的。
+</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;那么，当要判断0位和2位是什么数字时，先去问(5,123467)分类器，若它输出1，那表明这个数字无疑是5了，那就没有必要去问其他数字分类器了，这可以节省时间。若它输出-1，表明不是5，那它很有可能是3，因为3出现概率是第二高的，所以让它去问(3,12467)分类器，以此类推。
+</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;这种结合实际情况和概率的方法是不是很绝妙(*/ω＼*)，基于这个想法，SVM多分类问题就算解决了。代码参见<a class='attention'>svm_login.py recognize()。</a>
+</p>
+
+<br>
+
+<h2 id='Etitle'>Step4&nbsp;结果展示</h2>
+<h3>模拟登陆</h3>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+这个在KNN开发中提到过，不赘述了，模拟登陆由函数<a class='attention'>svm_login.py login(username)</a>实现。</p>
+<div class='pic'><img  src='3.gif'><p>结果展示</p></div>
+
+<h3>正确率</h3>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+这里正确率其实可以算出来，因为0位和2位1-7每个数字出现的概率已知，且1-7每个数字被分类器正确识别的概率也已知(大部分数字正确率都是1，有一两个错误率是0.0002)。对于1位，无论出现"+"还是"*"识别正确率都是1。那么问题来了，求0,1,2位它们同时被正确识别的概率，也就是验证码被正确识别的概率是多少。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+这是一道赤裸裸的数学概率题呀，我就不算啦（￣︶￣）↗根据我的实际经验和印象，大约测试400张验证码会有一张出错。</p>
+
+
+<br>
+
+<h2 id='Ftitle'>SVM和KNN对比</h2>
+<h3>SVM</h3>
+<div style="margin-left: 36px;">
+<li>原理复杂，涉及很多高等数学问题。</li>
+<li>训练速度比较慢，尤其训练样本达到4500个的时候，很长时间也未求解出$ \alpha \ b $。</li>
+<li>训练完成后，进行识别只需要小部分的支持向量和$ b $，完全抛弃样本数据独立工作，在运行时间上更快。</li>
+</div>
+<h3>KNN</h3>
+<div style="margin-left: 36px;">
+<li>原理简单，就是比较点与点的距离。</li>
+<li>训练速度不算太快也不算太慢。</li>
+<li>训练完成后，进行识别仍旧依赖大量样本数据，每次识别都要与大量的样本数据进行运算，在运行时间上可能不占优势。</li>
+</div>
+
+<br>
+
+<h2 id='Gtitle'>感谢</h2>
+<h3><img  style="  vertical-align:middle;  height: 36px;" src='head.jpg'><a style=" ">Miss Wang</a></h3>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;我实验室同学。一个安静寡言，喜欢在Photoshop和数位板上画画的内秀女孩。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在我吩咐她对2250张图片单元人工人类时，她聪明地想到了"像素和"的粗分类算法。这使得2250张图片单元仅仅有100多张图片需要人工分类！！！</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"像素和"让我很受启发，就是接受不完美。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;在人工分类图片单元这个问题上，我一直执迷于寻找一种好方法，能够准确无误地把图片归类，而思前想后，人工分类无疑是这个问题的唯一解。但是"像素和"这种简单粗暴的方法却能把几千张图片自动分类，尽管有几百张图片无法分类。
+但对于我来说，它毫无疑问地降低了人的工作负担，这就已经足够了不是吗？现在回过头一看，我恍然发现，原来我最需要的不是一个归类的方法，而是如何减轻人的工作负担。"像素和"，尽管它很不完美，但却十分奏效！</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;最后，感谢她的好脾气，包容我如此无理的要求。</p>
+<h3>Chart.js</h3>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 一个用于网页的JavaScript 图表工具，此网页漂亮的柱状图展示就是它的功劳。</p>
+<div  class='code'>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a target="_blank" href=" https://chartjs.bootcss.com/">Chart.js官网</a></p>
+
+</div>
+
+<h3>Mathjax</h3>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 一个JavaScript引擎，用来简洁精美地排版网页上的数学公式。</p>
+<div  class='code'>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a target="_blank" href="https://www.mathjax.org/">Mathjax官网</a></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a target="_blank" href=" https://www.cnblogs.com/fanghao/p/7767789.html">Mathjax样例</a></p>
+</div>
+<br>
+
+<h2 id='Htitle'>结束</h2>
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 这些天我仿佛打了鸡血一般，起早贪黑。努力起来，连我自己都感到害怕(*/ω＼*)</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 但是，虽然疲惫，却没有KNN开发那样的痛苦。很多程序都是信手拈来，有种前人栽树后人乘凉的感觉。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 说实话，用SVM这么高大上的复杂理论去识别如此规整的验证码，有种杀鸡用牛刀的感觉。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 整个项目花费3天时间(写这个开发记录竟然也花了3天(╯‵□′)╯︵┻━┻)，相比KNN的开发时间被大大缩短。对Python的运用，也开始渐渐得心应手。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 有一种成长，蜕变，破壳而出的感觉。</p>
+<p style="text-align: right;">2018.3.28&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </p>
+<br><br>
+</div>
+
+<script type="text/javascript">
+$(function(){
+var pos = 0,
+    ticking = false,
+    header = $("#head");
+	
+	
+	$(window).scroll(function() {
+	  pos= $(window).scrollTop();
+	  if(pos > 90&&!ticking){
+      header.addClass("scroll_down");
+      ticking = true;
+     }
+	 if(pos < 90 && ticking){
+		  header.removeClass("scroll_down");
+		  ticking = false;
+	 }
+	});
+	
+	$("#A").click(function(){
+		$("body,html").stop().animate({scrollTop:$('#Atitle').offset().top-100},500);
+	})
+	$("#B").click(function(){
+		$("body,html").stop().animate({scrollTop:$('#Btitle').offset().top-100},500);
+	})
+	$("#C").click(function(){
+		$("body,html").stop().animate({scrollTop:$('#Ctitle').offset().top-100},500);
+	})
+	$("#D").click(function(){
+		$("body,html").stop().animate({scrollTop:$('#Dtitle').offset().top-100},500);
+	})
+	$("#E").click(function(){
+		$("body,html").stop().animate({scrollTop:$('#Etitle').offset().top-100},500);
+	})
+	$("#F").click(function(){
+		$("body,html").stop().animate({scrollTop:$('#Ftitle').offset().top-100},500);
+	})
+	$("#G").click(function(){
+		$("body,html").stop().animate({scrollTop:$('#Gtitle').offset().top-100},500);
+	})
+	$("#H").click(function(){
+		$("body,html").stop().animate({scrollTop:$('#Htitle').offset().top-100},300);
+	})
+});
+
+
+</script>
+<!--这里使用了bootcss的cdn来加速访问-->
+<script src="https://cdn.bootcss.com/mathjax/2.7.2/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    showProcessingMessages: false, //关闭js加载过程信息
+    messageStyle: "none", //不显示信息
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX", "output/HTML-CSS"],
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"] ], //行内公式选择符
+        displayMath: [ ['$$','$$'], ["\\[","\\]"] ], //段内公式选择符
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre','code','a'], //避开某些标签
+        ignoreClass:"comment-content" //避开含该Class的标签
+    },
+    "HTML-CSS": {
+        availableFonts: ["STIX","TeX"], //可选字体
+        showMathMenu: false //关闭右击菜单显示
+    }
+});
+MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
+</script>
+
+<script src="ChartData.js" type="text/javascript"></script>
+</body>
+</html>

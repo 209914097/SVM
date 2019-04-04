@@ -1,0 +1,151 @@
+﻿body{
+	font-family: 微软雅黑;
+	background-color:rgba(234, 234, 234, 0.5);
+	margin: 0px;
+	}
+
+/* 头部 */
+	
+#head {
+    padding: 10px 10px 10px 50px;
+	
+    margin: 0 -10px;
+    width: 100%;
+    position: fixed;
+    z-index: 301;
+    min-width: 1000px;
+    transition: all 0.8s;
+    
+}
+.scroll_down{
+	
+ 
+    position: fixed;
+    background-color: #262626;
+	box-shadow: 0 0 15px #A0A0A0;
+	transition: all 0.8s;
+}
+input{
+	background-color: rgba(255, 255, 255, 0.15);
+	color: rgb(220, 220, 220);
+	border:0;
+	width: 200px; 
+	height:20px;
+	font-family: 微软雅黑;
+	padding: 4px;
+	margin:2px  25px 2px 0px;
+	font-size: 19px;
+	transition: all 0.4s;
+	
+}
+input:hover {
+	border:0;
+    background-color: rgba(255, 255, 255, 0.3);
+}
+.bt {
+	      
+  background-color: rgba(255, 255, 255, 0.15);
+	color: rgb(220, 220, 220);
+	border:0;
+	width: 160px; 
+	height:35px;
+	font-family: 微软雅黑;
+	padding: 4px;
+	margin:2px  25px 2px 0px;
+	font-size: 19px;
+	transition: all 0.4s;
+}   
+.bt:hover {  
+	 border:0;
+	 background-color: rgba(255, 255, 255, 0.3);
+}
+.bt:focus {  
+    outline: -webkit-focus-ring-color auto 0px;
+}
+.bt:active {
+    background: #e0e0e0;
+   
+}
+
+#msg{
+	position:absolute;
+	top:710px;
+	margin:0 4.8% ; 
+	width: 90%;
+	min-width: 888px;
+}
+	
+/* 背景大图 */
+
+.bg{
+	height:700px;	
+    width: 100%;
+    padding: 0;
+    position: absolute;
+}
+.bg h1{
+	
+	font-family: 'Dancing Script', cursive;
+	color: #fff;
+    font-size: 10em;
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+.bg p{
+	color: #fff;
+    font-size: 32px;
+    font-weight: 300;
+    margin-top: 10px;
+    margin-bottom: 40px;
+	font-family:仿宋;
+}
+.bg img{
+	height:100%;
+	width:100%;
+}	
+.overlay{
+	
+	
+	background: rgba(0,0,0,0.4);
+}
+.text{
+	
+	z-index: 1;
+	padding-top: 250px;	
+    padding-bottom: 200px;
+    text-align: center;
+	height: 150px;
+}	
+
+.gifpic{
+	width: 1000px;
+    height: 500px;
+}
+.code{
+	background-color: #d6d6d6;
+    margin-left: 50px;
+	transition: all 0.5s;
+}
+.code:hover{
+	background: #c5c5c5;
+    transition: all 0.5s;
+}
+.attention{
+	    color: red;
+}
+.picinline{
+	text-align: -webkit-center;
+    float: left;
+	margin-left: 150px;
+}
+.pic{
+	text-align: -webkit-center;
+}
+.ptxt{
+	margin:0px;
+}
+.foot{
+	
+	
+}
